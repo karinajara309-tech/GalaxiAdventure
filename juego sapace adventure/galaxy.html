@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viaje Espacial: Sistema Solar y Sílabas</title>
+    <style>
+        :root {
+            --bg-space: #0B0B2A;
+            --text-light: #F0F0F0;
+            --accent-glow: #00FFFF;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--bg-space);
+            color: var(--text-light);
+            margin: 0;
+            padding: 10px;
+            text-align: center;
+            background-image: radial-gradient(circle at bottom, #1B1B4B 0%, #0B0B2A 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Fondo de estrellas animadas */
+        .stars {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none;
+            background: transparent url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><circle cx="20" cy="20" r="1.5" fill="white" opacity="0.8"/><circle cx="150" cy="80" r="1" fill="white" opacity="0.5"/><circle cx="300" cy="250" r="2" fill="white" opacity="0.9"/><circle cx="80" cy="300" r="1.2" fill="white" opacity="0.6"/><circle cx="350" cy="50" r="1" fill="white" opacity="0.7"/></svg>') repeat;
+            animation: twinkle 4s infinite alternate;
+        }
+        @keyframes twinkle { 0% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        h1 { color: #FFD700; text-shadow: 0 0 15px rgba(255, 215, 0, 0.8); margin-bottom: 5px; font-size: 2.2em; letter-spacing: 1px;}
+        .subtitle { color: #A0C4FF; margin-bottom: 20px; font-size: 1.1em;}
+
+        /* Botón de Música */
+        #music-btn {
+            position: absolute; top: 15px; right: 15px;
+            background: rgba(0,0,0,0.6); color: white; border: 2px solid #4CAF50;
+            padding: 8px 15px; font-size: 0.9em; border-radius: 20px; cursor: pointer;
+            z-index: 100; transition: all 0.3s ease; box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+        #music-btn:hover { background: rgba(76, 175, 80, 0.2); transform: scale(1.05); }
+
+        /* Pantallas */
+        #setup-screen, #end-screen {
+            background: rgba(11, 11, 42, 0.85); border: 2px solid #64B5F6; backdrop-filter: blur(5px);
+            border-radius: 15px; padding: 25px; max-width: 600px; margin: 20px auto; box-shadow: 0 0 20px rgba(100, 181, 246, 0.3);
+        }
+        #game-screen { display: none; }
+        #end-screen { display: none; border-color: #FFD700; box-shadow: 0 0 30px rgba(255,215,0,0.4); }
+        
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 1.1em;}
+        .input-group input { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #444; font-size: 1em; background: rgba(255,255,255,0.9); box-sizing: border-box; transition: 0.3s;}
+        .input-group input:focus { outline: none; border-color: #64B5F6; box-shadow: 0 0 8px #64B5F6;}
+        
+        .btn-main {
+            background: linear-gradient(135deg, #4CAF50, #45a049); color: white; border: none;
+            padding: 15px 30px; font-size: 1.2em; border-radius: 10px; text-transform: uppercase; letter-spacing: 1px;
+            cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; margin-top: 10px; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+        .btn-main:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6); }
+        .btn-main:active { transform: translateY(1px); }
+
+        /* Barra de Nivel */
+        #level-indicator {
+            font-size: 1.5em; font-weight: bold; color: #FF9800; text-transform: uppercase;
+            background: rgba(255,152,0,0.15); padding: 10px 20px; border-radius: 10px;
+            display: inline-block; margin-bottom: 15px; border: 1px solid #FF9800; box-shadow: 0 0 10px rgba(255,152,0,0.2);
+        }
+
+        .scoreboard { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
+        .player-card {
+            background: rgba(255,255,255,0.05); border: 2px solid #555; backdrop-filter: blur(3px);
+            border-radius: 10px; padding: 12px; width: 140px; transition: 0.3s;
+        }
+        .player-card.active { transform: translateY(-5px) scale(1.05); box-shadow: 0 10px 20px rgba(0, 255, 255, 0.2); border-color: var(--accent-glow) !important; background: rgba(255,255,255,0.1);}
+        .player-name { font-weight: bold; font-size: 1.1em; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; margin-bottom: 8px;}
+        .score-stats { display: flex; justify-content: space-around; font-size: 1em; background: rgba(0,0,0,0.3); border-radius: 5px; padding: 4px 0;}
+
+        .turn-panel {
+            background: rgba(255, 255, 255, 0.05); border-radius: 15px; backdrop-filter: blur(5px);
+            padding: 20px; max-width: 800px; margin: 0 auto 25px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        #dice-result-text { font-size: 1.4em; font-weight: bold; color: #FFD54F; margin-top:15px; min-height: 30px;}
+        
+        /* Cuerpos Celestes */
+        .solar-system {
+            display: flex; justify-content: center; flex-wrap: wrap; gap: 20px; max-width: 900px; margin: 0 auto; padding-bottom: 30px;
+        }
+        .planet {
+            width: 95px; height: 95px; border-radius: 50%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 2.5em; cursor: pointer; position: relative; opacity: 0.4; pointer-events: none;
+            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.6), 0 0 10px rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+        .planet.active-search { opacity: 1; pointer-events: auto; animation: pulse 1.5s infinite; cursor: crosshair;}
+        .planet.active-search:hover { transform: scale(1.15); z-index: 10; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.6), 0 0 15px rgba(255,255,255,0.4); } 50% { transform: scale(1.05); box-shadow: inset -10px -10px 20px rgba(0,0,0,0.6), 0 0 25px rgba(255,255,255,0.8); } }
+        
+        .p1 { background: radial-gradient(circle at 30% 30%, #FFF59D, #F57F17); } 
+        .p2 { background: radial-gradient(circle at 30% 30%, #F5F5F5, #757575); } 
+        .p3 { background: radial-gradient(circle at 30% 30%, #ff8a80, #b71c1c); }
+        .p4 { background: radial-gradient(circle at 30% 30%, #8c9eff, #1a237e); }
+        .p5 { background: radial-gradient(circle at 30% 30%, #ffe082, #e65100); }
+        .p6 { background: radial-gradient(circle at 30% 30%, #b9f6ca, #1b5e20); }
+        .p7 { background: radial-gradient(circle at 30% 30%, #ea80fc, #4a148c); }
+        .p8 { background: radial-gradient(circle at 30% 30%, #84ffff, #006064); }
+        
+        .planet-num { position: absolute; bottom: -25px; font-size: 0.35em; font-family: sans-serif; text-transform: uppercase; font-weight: bold; background: rgba(0,0,0,0.8); padding: 4px 10px; border-radius: 12px; color: white; border: 1px solid rgba(255,255,255,0.3); letter-spacing: 1px; white-space: nowrap;}
+
+        /* Modales */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 50;
+        }
+        .modal-content {
+            background: linear-gradient(to bottom, #111133, #0a0a20); border: 3px solid #FFD700; border-radius: 20px;
+            padding: 35px; max-width: 600px; width: 90%; text-align: center; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+        
+        /* Temporizador */
+        .timer-container { width: 100%; height: 22px; background: rgba(255,255,255,0.1); border-radius: 11px; margin: 20px 0; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);}
+        .timer-bar { height: 100%; width: 100%; background: linear-gradient(90deg, #4CAF50, #81C784); transition: width 1s linear, background 0.5s; }
+
+        .options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+        .option-btn { background: rgba(0,0,0,0.3); color: white; border: 2px solid #64B5F6; padding: 18px; font-size: 1.2em; font-weight: bold; border-radius: 12px; cursor: pointer; transition: all 0.2s;}
+        .option-btn:hover { background: #64B5F6; color: #000; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(100, 181, 246, 0.4); }
+        .option-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+        
+        /* Reto Físico Modal */
+        #reto-modal .modal-content { border-color: #E91E63; background: linear-gradient(to bottom, #2b0b16, #120509); box-shadow: 0 0 40px rgba(233, 30, 99, 0.4); }
+        #reto-icon { font-size: 5.5em; margin-bottom: 15px; animation: bounce 1s infinite; text-shadow: 0 10px 20px rgba(0,0,0,0.5);}
+        @keyframes bounce { 0%, 100% {transform: translateY(0);} 50% {transform: translateY(-20px);} }
+
+        /* Tabla de Liderazgo */
+        .leaderboard-table {
+            width: 100%; border-collapse: separate; border-spacing: 0 8px; margin: 20px 0;
+        }
+        .leaderboard-table th { padding: 12px; background: rgba(255,215,0,0.1); color: #FFD700; text-transform: uppercase; font-size: 0.9em; letter-spacing: 1px;}
+        .leaderboard-table td { padding: 15px; background: rgba(0,0,0,0.4); border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .leaderboard-table tr td:first-child { border-left: 1px solid rgba(255,255,255,0.1); border-radius: 10px 0 0 10px; }
+        .leaderboard-table tr td:last-child { border-right: 1px solid rgba(255,255,255,0.1); border-radius: 0 10px 10px 0; }
+        .leaderboard-table tr:hover td { background: rgba(255,255,255,0.1); }
+
+    </style>
+</head>
+<body>
+
+    <div class="stars"></div>
+
+    <!-- AQUÍ SE CARGA TU CANCIÓN EXACTA -->
+    <audio id="bg-music" loop>
+        <source src="micancion.mp3.mp3" type="audio/mpeg">
+    </audio>
+
+    <button id="music-btn" onclick="toggleMusic()">🔊 Música: ON</button>
+
+    <h1>🚀 Aventura Espacial de las Sílabas 🌌</h1>
+    <div class="subtitle">Explora 8 mundos, supera niveles y vence el reloj</div>
+
+    <!-- PANTALLA 1: CONFIGURACIÓN -->
+    <div id="setup-screen">
+        <h2 style="color: #64B5F6; margin-top: 0; text-transform: uppercase; letter-spacing: 1px;">Tripulación</h2>
+        <div class="input-group"><label style="color: #FF5252;">🔴 Equipo 1:</label><input type="text" id="name-1" value="Astro Rojo" maxlength="15"></div>
+        <div class="input-group"><label style="color: #448AFF;">🔵 Equipo 2:</label><input type="text" id="name-2" value="Astro Azul" maxlength="15"></div>
+        <div class="input-group"><label style="color: #69F0AE;">🟢 Equipo 3:</label><input type="text" id="name-3" value="Astro Verde" maxlength="15"></div>
+        <div class="input-group"><label style="color: #FFD740;">🟡 Equipo 4:</label><input type="text" id="name-4" value="Astro Amarillo" maxlength="15"></div>
+        <button class="btn-main" onclick="startGame()">🚀 Iniciar Misión</button>
+    </div>
+
+    <!-- PANTALLA 2: JUEGO PRINCIPAL -->
+    <div id="game-screen">
+        <div id="level-indicator">NIVEL 1: Novatos Espaciales</div>
+        <div class="scoreboard" id="scoreboard"></div>
+        <div class="turn-panel">
+            <div id="turn-indicator" style="font-size: 1.3em; margin-bottom: 12px;">Turno de: <strong>...</strong></div>
+            <button class="btn-main" id="btn-roll" style="width: auto; background: linear-gradient(135deg, #FF9800, #F57C00);" onclick="rollDice()">🎲 Lanzar Dado Cósmico</button>
+            <div id="dice-result-text">Esperando lanzamiento...</div>
+        </div>
+
+        <div class="solar-system">
+            <div class="planet p1" onclick="selectPlanet(1)">☀️<div class="planet-num">1. Sol</div></div>
+            <div class="planet p2" onclick="selectPlanet(2)">🌙<div class="planet-num">2. Luna</div></div>
+            <div class="planet p3" onclick="selectPlanet(3)">🪐<div class="planet-num">3. Marte</div></div>
+            <div class="planet p4" onclick="selectPlanet(4)">🌍<div class="planet-num">4. Tierra</div></div>
+            <div class="planet p5" onclick="selectPlanet(5)">🌕<div class="planet-num">5. Venus</div></div>
+            <div class="planet p6" onclick="selectPlanet(6)">🟣<div class="planet-num">6. Júpiter</div></div>
+            <div class="planet p7" onclick="selectPlanet(7)">🟢<div class="planet-num">7. Urano</div></div>
+            <div class="planet p8" onclick="selectPlanet(8)">☄️<div class="planet-num">8. Cometa</div></div>
+        </div>
+    </div>
+
+    <!-- PANTALLA 3: RESULTADOS FINALES -->
+    <div id="end-screen">
+        <h1 style="color: #FFD700; font-size: 3em; margin-bottom:5px; text-shadow: 0 0 20px rgba(255,215,0,0.6);">🏆 Misión Cumplida 🏆</h1>
+        <p style="font-size: 1.2em; color: #A0C4FF; line-height: 1.6; padding: 0 20px;">
+            ¡Felicidades a todos los valientes astronautas!<br> 
+            Han superado los retos del universo demostrando gran inteligencia, trabajo en equipo y valentía. ¡El cosmos está orgulloso!
+        </p>
+        <div id="leaderboard-container"></div>
+        <button class="btn-main" style="background: linear-gradient(135deg, #E91E63, #C2185B); margin-top: 20px;" onclick="location.reload()">🔄 Jugar Otra Vez</button>
+    </div>
+
+    <!-- MODAL DE PREGUNTA -->
+    <div id="question-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="modal-title" style="color: #FFD700; margin-top:0; font-size: 1.8em;">Misión</h2>
+            <div class="timer-container"><div class="timer-bar" id="timer-bar"></div></div>
+            <div style="font-size: 1.6em; margin-bottom: 25px; background: rgba(0,0,0,0.4); padding: 20px; border-radius:12px; border: 1px solid rgba(255,255,255,0.1);" id="challenge-text">Cargando...</div>
+            <div class="options-grid" id="options-container"></div>
+            
+            <div id="feedback-area" style="display:none; margin-top: 25px;">
+                <div id="feedback-msg" style="font-size: 1.6em; font-weight: bold; margin-bottom:20px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);"></div>
+                <button class="btn-main" style="background: linear-gradient(135deg, #2196F3, #1976D2);" onclick="closeQuestion()">Siguiente Turno ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE RETO FÍSICO / NIVEL -->
+    <div id="reto-modal" class="modal">
+        <div class="modal-content">
+            <div id="reto-icon">👾</div>
+            <h1 style="color: #E91E63; font-size: 2.5em; margin-bottom: 10px;">¡RETO DE NIVEL!</h1>
+            <p style="font-size: 1.4em; color: #F8BBD0; line-height: 1.5; padding: 0 15px;" id="reto-text">Todos deben hacer algo divertido.</p>
+            <button class="btn-main" id="btn-reto-avanzar" style="background: linear-gradient(135deg, #E91E63, #C2185B); margin-top: 25px;" onclick="advanceLevel()">¡Reto Superado!</button>
+        </div>
+    </div>
+
+    <script>
+        // --- SÍNTESIS DE AUDIO DE EVENTOS ---
+        let audioCtx;
+        function initAudio() {
+            if(!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+        }
+        function playTone(freq, type, duration, vol=0.1) {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + duration);
+        }
+        
+        function sndCorrect() { playTone(523.25, 'sine', 0.1); setTimeout(()=>playTone(659.25, 'sine', 0.1), 100); setTimeout(()=>playTone(783.99, 'sine', 0.3), 200); }
+        function sndError() { playTone(300, 'sawtooth', 0.2); setTimeout(()=>playTone(250, 'sawtooth', 0.4), 200); }
+        function sndTick() { playTone(800, 'square', 0.05, 0.02); }
+        function sndLevelUp() { playTone(440, 'triangle', 0.1); setTimeout(()=>playTone(554, 'triangle', 0.1), 150); setTimeout(()=>playTone(659, 'triangle', 0.4), 300); }
+
+        // --- CONTROL DE LA MÚSICA DE FONDO ---
+        let isMusicPlaying = true;
+        const bgMusic = document.getElementById("bg-music");
+        bgMusic.volume = 0.35; // Volumen balanceado
+
+        function toggleMusic() {
+            const btn = document.getElementById("music-btn");
+            if (isMusicPlaying) {
+                bgMusic.pause();
+                isMusicPlaying = false;
+                btn.innerHTML = "🔇 Música: OFF";
+                btn.style.borderColor = "#FF5252";
+                btn.style.boxShadow = "none";
+            } else {
+                bgMusic.play().catch(e => console.log("Audio bloqueado por el navegador", e));
+                isMusicPlaying = true;
+                btn.innerHTML = "🔊 Música: ON";
+                btn.style.borderColor = "#4CAF50";
+                btn.style.boxShadow = "0 0 10px rgba(76, 175, 80, 0.5)";
+            }
+        }
+
+        // --- ESTADO DEL JUEGO ---
+        let players = [];
+        let currentPlayerIndex = 0;
+        let currentDiceValue = 0;
+        let currentAnswerIndex = -1;
+        let turnsTaken = 0;
+        let currentLevel = 1; 
+        const turnsPerLevel = 4;
+        let timerInterval;
+        let timeLeft = 30;
+
+        const qLevel1 = [
+            { q: "Une: <strong style='color:#64B5F6'>MA - RI - PO - SA</strong>", options: ["MAPARISO", "MARIPOSA", "SAPOMARI"], ans: 1 },
+            { q: "Encuentra: <strong style='color:#FFD54F'>GATO</strong>", options: ["GOTA", "PATO", "GATO"], ans: 2 },
+            { q: "Completa: <strong style='color:#81C784'>_ _ CA</strong> (Animal que da leche)", options: ["PO", "VA", "MA"], ans: 1 }
+        ];
+        const qLevel2 = [
+            { q: "Une: <strong style='color:#64B5F6'>A - S - TRO - NAU - TA</strong>", options: ["ASTRONAUTA", "ASTROTA", "NAUTAASTRO"], ans: 0 },
+            { q: "Encuentra la mal escrita:", options: ["COHETE", "ESTREYA", "PLANETA"], ans: 1 },
+            { q: "Completa: <strong style='color:#81C784'>ES - TRE - _ _</strong>", options: ["LLA", "YA", "LA"], ans: 0 }
+        ];
+        const qLevel3 = [
+            { q: "Ordena: <strong style='color:#64B5F6'>LE - TE - SCO - PIO</strong>", options: ["TELESCOPIO", "ESCOPIOTELE", "PIOTESCOLE"], ans: 0 },
+            { q: "Sinónimo de Galaxia:", options: ["Universo", "Océano", "Tierra"], ans: 0 },
+            { q: "Completa: <strong style='color:#81C784'>M _ TE _ RI _ O</strong>", options: ["E-O-T", "A-E-I", "O-O-A"], ans: 0 }
+        ];
+
+        const levelChallenges = [
+            "Gravedad Cero: ¡Todos los tripulantes deben saltar en cámara lenta durante 10 segundos!",
+            "Comunicación Alienígena: ¡Cada astronauta debe decir su nombre al revés con voz de robot!",
+            "Llegada a la Base: ¡Misión cumplida! Chocad los cinco y prepárense para la clasificación."
+        ];
+
+        function getQuestionsForLevel() {
+            if(currentLevel === 1) return qLevel1;
+            if(currentLevel === 2) return qLevel2;
+            return qLevel3;
+        }
+
+        // 1. INICIAR JUEGO Y REPRODUCIR LA MÚSICA
+        function startGame() {
+            initAudio();
+            
+            // LA MÚSICA ARRANCA INMEDIATAMENTE AL PRESIONAR EL BOTÓN DE INICIO
+            if (isMusicPlaying) {
+                bgMusic.play().catch(e => {
+                    console.log("Error al intentar reproducir la música de fondo.", e);
+                });
+            }
+
+            const colors = ["#FF5252", "#448AFF", "#69F0AE", "#FFD740"];
+            for(let i=1; i<=4; i++) {
+                let name = document.getElementById("name-"+i).value.trim() || "Equipo "+i;
+                players.push({ id: i-1, name: name, color: colors[i-1], aciertos: 0, errores: 0 });
+            }
+            document.getElementById("setup-screen").style.display = "none";
+            document.getElementById("game-screen").style.display = "block";
+            updateUI();
+        }
+
+        // 2. ACTUALIZAR UI
+        function updateUI() {
+            const board = document.getElementById("scoreboard");
+            board.innerHTML = "";
+            players.forEach((p, index) => {
+                const isActive = index === currentPlayerIndex ? "active" : "";
+                board.innerHTML += `
+                    <div class="player-card ${isActive}">
+                        <div class="player-name" style="color: ${p.color}">${p.name}</div>
+                        <div class="score-stats"><span style="color:#81C784">✔️ ${p.aciertos}</span> <span style="color:#E57373">❌ ${p.errores}</span></div>
+                    </div>`;
+            });
+            const p = players[currentPlayerIndex];
+            document.getElementById("turn-indicator").innerHTML = `Turno de: <strong style="color:${p.color}; font-size:1.2em;">${p.name}</strong>`;
+            document.getElementById("btn-roll").disabled = false;
+            document.getElementById("dice-result-text").innerText = "¿Hacia dónde volaremos?";
+            document.querySelectorAll('.planet').forEach(pl => pl.classList.remove('active-search'));
+            currentDiceValue = 0;
+            
+            const lvlNames = ["Novatos Espaciales", "Exploradores Avanzados", "Maestros Galácticos"];
+            let displayLevel = currentLevel > 3 ? 3 : currentLevel;
+            document.getElementById("level-indicator").innerText = `NIVEL ${displayLevel}: ${lvlNames[displayLevel-1]}`;
+        }
+
+        // 3. DADO
+        function rollDice() {
+            initAudio();
+            document.getElementById("btn-roll").disabled = true;
+            let rolls = 0;
+            const resText = document.getElementById("dice-result-text");
+            let interval = setInterval(() => {
+                resText.innerText = "🎲 Volando al sector... " + (Math.floor(Math.random() * 8) + 1);
+                sndTick();
+                rolls++;
+                if(rolls > 12) {
+                    clearInterval(interval);
+                    currentDiceValue = Math.floor(Math.random() * 8) + 1;
+                    resText.innerHTML = `¡Destino fijado: <span style="color:#00FFFF; font-size:1.3em;">Planeta ${currentDiceValue}</span>! Haz clic en su órbita.`;
+                    document.querySelectorAll('.planet').forEach(pl => pl.classList.add('active-search'));
+                }
+            }, 80);
+        }
+
+        // 4. SELECCIONAR PLANETA
+        function selectPlanet(num) {
+            if (currentDiceValue === 0) return; 
+            if (num === currentDiceValue) openChallenge(num);
+            else {
+                document.getElementById("dice-result-text").innerHTML = `<span style="color:#FF5252">Ese es el ${num}. ¡Busca el ${currentDiceValue}!</span>`;
+                sndError();
+            }
+        }
+
+        // 5. MODAL Y TEMPORIZADOR
+        function openChallenge(planetNum) {
+            const modal = document.getElementById("question-modal");
+            const titles = ["El Sol", "La Luna", "Marte", "La Tierra", "Venus", "Júpiter", "Urano", "Cometa Veloz"];
+            document.getElementById("modal-title").innerText = `Misión en: ${titles[planetNum-1]}`;
+            
+            const qList = getQuestionsForLevel();
+            const qObj = qList[Math.floor(Math.random() * qList.length)];
+            currentAnswerIndex = qObj.ans;
+
+            document.getElementById("challenge-text").innerHTML = qObj.q;
+            const container = document.getElementById("options-container");
+            container.innerHTML = "";
+            
+            qObj.options.forEach((opt, index) => {
+                const btn = document.createElement("button");
+                btn.className = "option-btn"; btn.innerText = opt;
+                btn.onclick = () => checkAnswer(index, btn);
+                container.appendChild(btn);
+            });
+
+            document.getElementById("feedback-area").style.display = "none";
+            container.style.display = "grid";
+            modal.style.display = "flex";
+            
+            startTimer();
+        }
+
+        function startTimer() {
+            timeLeft = 30;
+            const bar = document.getElementById("timer-bar");
+            bar.style.width = "100%"; bar.style.background = "linear-gradient(90deg, #4CAF50, #81C784)";
+            
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                let percentage = (timeLeft / 30) * 100;
+                bar.style.width = percentage + "%";
+                
+                if(timeLeft <= 10) { bar.style.background = "linear-gradient(90deg, #FF9800, #FFB74D)"; sndTick(); }
+                if(timeLeft <= 5) { bar.style.background = "linear-gradient(90deg, #FF5252, #E57373)"; }
+                
+                if(timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    checkAnswer(-1, null);
+                }
+            }, 1000);
+        }
+
+        // 6. REVISAR RESPUESTA
+        function checkAnswer(selectedIndex, btnElement) {
+            clearInterval(timerInterval);
+            const isCorrect = (selectedIndex === currentAnswerIndex);
+            const player = players[currentPlayerIndex];
+
+            document.querySelectorAll(".option-btn").forEach(b => {
+                b.disabled = true;
+                if(b !== btnElement) b.style.opacity = "0.3";
+            });
+            const msg = document.getElementById("feedback-msg");
+
+            if (isCorrect) {
+                player.aciertos++; sndCorrect();
+                btnElement.style.background = "linear-gradient(135deg, #4CAF50, #2E7D32)";
+                msg.innerHTML = "¡Excelente Respuesta! 🌟"; msg.style.color = "#81C784";
+            } else {
+                player.errores++; sndError();
+                if(btnElement) btnElement.style.background = "linear-gradient(135deg, #FF5252, #C62828)";
+                msg.innerHTML = selectedIndex === -1 ? "¡Se acabó el tiempo! ⏳" : "¡Casi! Sigue practicando 🛸"; 
+                msg.style.color = "#FF8A80";
+            }
+
+            document.getElementById("feedback-area").style.display = "block";
+        }
+
+        // 7. FLUJO Y RETOS DE NIVEL
+        function closeQuestion() {
+            document.getElementById("question-modal").style.display = "none";
+            turnsTaken++;
+            
+            if (turnsTaken % turnsPerLevel === 0 && currentLevel < 3) {
+                showLevelChallenge();
+            } else if (turnsTaken >= turnsPerLevel * 3) {
+                showLevelChallenge(true);
+            } else {
+                currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+                updateUI();
+            }
+        }
+
+        function showLevelChallenge(isEnd = false) {
+            sndLevelUp();
+            const modal = document.getElementById("reto-modal");
+            document.getElementById("reto-text").innerText = levelChallenges[(currentLevel > 3 ? 3 : currentLevel) - 1];
+            modal.style.display = "flex";
+            
+            const btn = document.getElementById("btn-reto-avanzar");
+            if(isEnd) {
+                btn.innerText = "Ver Podio Final 🏆";
+                btn.onclick = showLeaderboard;
+            } else {
+                btn.innerText = "¡Reto Superado!";
+                btn.onclick = advanceLevel;
+            }
+        }
+
+        function advanceLevel() {
+            document.getElementById("reto-modal").style.display = "none";
+            currentLevel++;
+            currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+            updateUI();
+        }
+
+        // 8. MOSTRAR TABLA DE CLASIFICACIÓN
+        function showLeaderboard() {
+            document.getElementById("reto-modal").style.display = "none";
+            document.getElementById("game-screen").style.display = "none";
+            
+            setTimeout(sndCorrect, 100); setTimeout(sndCorrect, 400); setTimeout(sndLevelUp, 700);
+
+            const sortedPlayers = [...players].sort((a, b) => {
+                if (b.aciertos !== a.aciertos) return b.aciertos - a.aciertos;
+                return a.errores - b.errores;
+            });
+
+            let tableHTML = `<table class="leaderboard-table">
+                <tr><th>Puesto</th><th>Astronauta</th><th>✔️ Aciertos</th><th>❌ Errores</th></tr>`;
+            
+            sortedPlayers.forEach((p, index) => {
+                let medal = "⭐";
+                if (index === 0) medal = "🥇";
+                else if (index === 1) medal = "🥈";
+                else if (index === 2) medal = "🥉";
+                
+                tableHTML += `<tr>
+                    <td style="font-size: 1.3em; text-align:center;">${medal} ${index + 1}</td>
+                    <td style="color:${p.color}; font-weight:bold; font-size: 1.2em; text-align:center;">${p.name}</td>
+                    <td style="color:#81C784; font-weight:bold; font-size: 1.2em; text-align:center;">${p.aciertos}</td>
+                    <td style="color:#E57373; font-weight:bold; font-size: 1.2em; text-align:center;">${p.errores}</td>
+                </tr>`;
+            });
+            tableHTML += `</table>`;
+
+            document.getElementById("leaderboard-container").innerHTML = tableHTML;
+            document.getElementById("end-screen").style.display = "block";
+        }
+
+    </script>
+</body>
+</html>
